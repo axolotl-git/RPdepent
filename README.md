@@ -7,7 +7,7 @@ and in each line of the file you need to insert the mods IDs, like this:
 ```
 modmenu
 polytone
-other cool mod IDs...
+other mod IDs...
 ```
 **for users:**
 just install the mod from modrinth or here, on github
