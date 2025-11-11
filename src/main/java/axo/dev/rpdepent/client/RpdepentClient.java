@@ -48,15 +48,15 @@ public class RpdepentClient implements ClientModInitializer {
                 //check if the line as the OR operator
                 if (line.contains("||")) {
                     //declare an array for the mods ID's
-                    String Keywords[] = line.split("||");
+                    String[] keywords = line.split("\\|\\|");
                     //Loop trough all of them
-                    for(int i = 0; i <= Keywords.length; i++) {
-                        if(FabricLoader.getInstance().isModLoaded(Keywords[i].strip())) {
-                            LOGGER.info("mod found: {}", Keywords[i]);
+                    for(int i = 0; i < keywords.length; i++) {
+                        if(FabricLoader.getInstance().isModLoaded(keywords[i].strip())) {
+                            LOGGER.info("mod found: {}", keywords[i]);
                             break; //found the motherfucker now terminate
                         }
                         else {
-                            NOT_FOUND_MODS.add(Keywords[i]);
+                            NOT_FOUND_MODS.add(keywords[i]);
                             found.set(true);
                         }
                     }
