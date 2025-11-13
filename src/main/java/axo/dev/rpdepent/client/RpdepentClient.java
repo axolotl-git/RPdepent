@@ -1,19 +1,11 @@
 package axo.dev.rpdepent.client;
 
 import axo.dev.rpdepent.GUI.CrashScreen;
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
-import com.mojang.brigadier.CommandDispatcher;
-import eu.midnightdust.lib.config.MidnightConfig;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +24,8 @@ public class RpdepentClient implements ClientModInitializer {
     // replace instance field with a static one
     public static final ArrayList<String> NOT_FOUND_MODS = new ArrayList<>();
     private Screen parent;
+    boolean atleastone = false;
+    String modidfound;
     @Override
     public void onInitializeClient() {
         LOGGER.info("RPD client init");
@@ -45,27 +39,39 @@ public class RpdepentClient implements ClientModInitializer {
 
         try {
             processRpdFiles(resourcepacks, line -> {
-                //check if the line as the OR operator
-                if (line.contains("||")) {
-                    //declare an array for the mods ID's
-                    String[] keywords = line.split("\\|\\|");
-                    //Loop trough all of them
-                    for(int i = 0; i < keywords.length; i++) {
-                        if(FabricLoader.getInstance().isModLoaded(keywords[i].strip())) {
-                            LOGGER.info("mod found: {}", keywords[i]);
-                            break; //found the motherfucker now terminate
-                        }
-                        else {
-                            NOT_FOUND_MODS.add(keywords[i]);
-                            found.set(true);
+                if (line == null || line.trim().isEmpty()) {
+                    return; // Skip empty lines
+                }
+
+                String trimmedLine = line.trim();
+
+                // Check if the line has the OR operator
+                if (trimmedLine.contains("||")) {
+                    boolean foundAny = false;
+                    String[] keywords = trimmedLine.split("\\|\\|");
+
+                    // Loop through all mod IDs in the OR condition
+                    for (String keyword : keywords) {
+                        String modId = keyword.strip();
+                        if (!modId.isEmpty() && FabricLoader.getInstance().isModLoaded(modId)) {
+                            LOGGER.info("Mod found: {}", modId);
+                            foundAny = true;
+                            break; // Found at least one required mod
                         }
                     }
-                }
-                else if (FabricLoader.getInstance().isModLoaded(line)) {
-                    LOGGER.info("mod found: {}", line);
+
+                    if (!foundAny) {
+                        // None of the mods in the OR condition were found
+                        NOT_FOUND_MODS.add(trimmedLine);
+                        found.set(true);
+                    }
                 } else {
-                    NOT_FOUND_MODS.add(line);
-                    found.set(true);
+                    if (FabricLoader.getInstance().isModLoaded(trimmedLine)) {
+                        LOGGER.info("Mod found: {}", trimmedLine);
+                    } else {
+                        NOT_FOUND_MODS.add(trimmedLine);
+                        found.set(true);
+                    }
                 }
             });
         } catch (IOException e) {
@@ -74,11 +80,7 @@ public class RpdepentClient implements ClientModInitializer {
 
         if (found.get()) {
             ClientTickEvents.END_CLIENT_TICK.register(mc -> {
-
-                if (true){
-                    client.setScreen(new CrashScreen());
-                }
-
+                client.setScreen(new CrashScreen());
             });
             String newline = System.getProperty("line.separator");
             MissingMods = "Mods with these IDs were not found: " + String.join(", ", NOT_FOUND_MODS);
