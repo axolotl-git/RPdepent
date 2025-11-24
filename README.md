@@ -14,8 +14,6 @@ also we have implemented the OR operator  `||`
 iris||optifine
 ```
 this will ensure that the user have either iris or optifine installed
-**for users:**
-just install the mod from modrinth or here, on github
 
 ## how to build
 
