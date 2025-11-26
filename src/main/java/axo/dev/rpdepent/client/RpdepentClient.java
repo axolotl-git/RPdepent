@@ -5,7 +5,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +22,11 @@ public class RpdepentClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     // replace instance field with a static one
     public static final ArrayList<String> NOT_FOUND_MODS = new ArrayList<>();
-    private Screen parent;
-    boolean atleastone = false;
-    String modidfound;
+    public AtomicBoolean found = new AtomicBoolean(false);
     @Override
     public void onInitializeClient() {
         LOGGER.info("RPD client init");
         MinecraftClient client = MinecraftClient.getInstance();
-        AtomicBoolean found = new AtomicBoolean(false);
         if (client == null) {
             LOGGER.warn("MinecraftClient not yet available; skipping resourcepack scan.");
             return;
@@ -49,7 +45,6 @@ public class RpdepentClient implements ClientModInitializer {
                 if (trimmedLine.contains("||")) {
                     boolean foundAny = false;
                     String[] keywords = trimmedLine.split("\\|\\|");
-
                     // Loop through all mod IDs in the OR condition
                     for (String keyword : keywords) {
                         String modId = keyword.strip();
@@ -62,7 +57,8 @@ public class RpdepentClient implements ClientModInitializer {
 
                     if (!foundAny) {
                         // None of the mods in the OR condition were found
-                        NOT_FOUND_MODS.add(trimmedLine);
+                        String ORnotfound = keywords[0] + " or " + keywords[1];
+                        NOT_FOUND_MODS.add(ORnotfound);
                         found.set(true);
                     }
                 } else {
@@ -79,12 +75,11 @@ public class RpdepentClient implements ClientModInitializer {
         }
 
         if (found.get()) {
-            ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+            ClientTickEvents.START_CLIENT_TICK.register(mc -> {
                 client.setScreen(new CrashScreen());
-            });
-            String newline = System.getProperty("line.separator");
-            MissingMods = "Mods with these IDs were not found: " + String.join(", ", NOT_FOUND_MODS);
+            MissingMods = "Mods with these IDs were not found:\n" + String.join("; " + NOT_FOUND_MODS) +"\nyour resource packs may not work properly without";
             LOGGER.error(MissingMods);
-        }
+        });
     }
+}
 }
