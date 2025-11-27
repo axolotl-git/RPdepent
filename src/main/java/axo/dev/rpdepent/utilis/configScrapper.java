@@ -21,11 +21,11 @@ import java.util.Map;
 
 public final class configScrapper {
 
-    private static final String TARGET_NAME = "RPD.txt";
+    private static final String target = "";
 
     private configScrapper() { /* utility class */ }
 
-    public static void processRpdFiles(Path rootDir, Consumer<String> lineHandler) throws IOException {
+    public static void processRpdFiles(Path rootDir, String target, Consumer<String> lineHandler) throws IOException {
         if (rootDir == null) throw new IllegalArgumentException("rootDir must not be null");
         if (lineHandler == null) throw new IllegalArgumentException("lineHandler must not be null");
 
@@ -75,7 +75,7 @@ public final class configScrapper {
             ZipEntry entry = entries.nextElement();
             if (entry.isDirectory()) continue;
             String entryName = getSimpleName(entry.getName());
-            if (TARGET_NAME.equals(entryName)) {
+            if (target.equals(entryName)) {
                 try (InputStream is = zf.getInputStream(entry);
                      BufferedReader br = new BufferedReader(new java.io.InputStreamReader(is, StandardCharsets.UTF_8))) {
                     String line;
@@ -102,7 +102,7 @@ public final class configScrapper {
                 continue;
             }
             String entryName = getSimpleName(entry.getName());
-            if (TARGET_NAME.equals(entryName)) {
+            if (target.equals(entryName)) {
                 try (BufferedReader br = new BufferedReader(new java.io.InputStreamReader(zis, StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = br.readLine()) != null) lineHandler.accept(line);

@@ -10,46 +10,51 @@ import java.util.Map;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class configFileParsers {
 
+    static String MOD_ID = "axo.dev.rpd";
+    static Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
     /**
-     * Legge un file JSON e restituisce la mappa "depends" come Map<String, String>.
-     * In caso di errore, torna una mappa vuota.
+     * Reads a JSON file and returns the map "depends" as Map<String, String>.
+     * If an error occurs, returns an empty map.
      */
     public static Map<String, String> parseJSON(Path path) throws IOException {
         if (path == null) {
             return Collections.emptyMap();
         }
 
-        // 1. Leggi il file
+        // 1. Read the file
         String jsonContent = Files.readString(path, StandardCharsets.UTF_8);
 
-        // 2. Esegui il parsing del JSON
+        // 2. Execute JSON parsing
         Object parsedObject;
         try {
             parsedObject = JSONValue.parse(jsonContent);
         } catch (Exception e) {
-            System.err.println("Errore di parsing JSON nel file: " + path + " - " + e.getMessage());
+            LOGGER.error("JSON parsing error: " + path + " - " + e.getMessage());
             return Collections.emptyMap();
         }
 
-        // 3. Verifica che il JSON principale sia un JSONObject
+        // 3.Verify that the main JSON is a JSONObject
         if (!(parsedObject instanceof JSONObject jsonObjectDecode)) {
-            System.err.println("Il JSON principale non è un JSONObject: " + path);
+            LOGGER.error("the main JSON is a JSONObject: " + path);
             return Collections.emptyMap();
         }
 
-        // 4. Estrai "depends"
+        // 4. Extract "depends"
         Object dependsObject = jsonObjectDecode.get("depends");
 
-        // 5. Verifica che "depends" sia un JSONObject
+        // 5. Verify that "depends" is a JSONObject
         if (!(dependsObject instanceof JSONObject dependsJson)) {
-            System.err.println("La chiave 'depends' non è un oggetto JSON: " + path);
+            LOGGER.error("'depends' key is not a JSON object: " + path);
             return Collections.emptyMap();
         }
 
-        // 6. Converti il JSONObject in Map<String, String>
+        // 6. Convert the JSONObject in Map<String, String>
         Map<String, String> result = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : dependsJson.entrySet()) {
@@ -59,7 +64,7 @@ public class configFileParsers {
             if (value instanceof String stringValue) {
                 result.put(key, stringValue);
             } else {
-                System.err.println("Valore non stringa nella sezione 'depends': chiave = " + key);
+                LOGGER.error("non string value in section 'depends': key = " + key);
             }
         }
 
