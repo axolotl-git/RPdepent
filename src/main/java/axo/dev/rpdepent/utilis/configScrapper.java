@@ -1,6 +1,5 @@
 package axo.dev.rpdepent.utilis;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,16 +9,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,13 +41,14 @@ public final class configScrapper {
                                 }
                             }
                             else {
-                                switch (fileName) {
-                                    case "RPD.txt":
+                                switch (fileName.toLowerCase()) {
+                                    case "rpd.txt":
                                         try (BufferedReader br = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
                                             String line;
                                             while ((line = br.readLine()) != null) lineHandler.accept(line);
                                         }
-                                    case "RPD.json":
+                                        break;
+                                    case "rpd.json":
                                         Map<String, String> depends = new HashMap<>();
                                         depends = configFileParsers.parseJSON(p);
                                         List<String> dependsKeys = new ArrayList<>(depends.keySet());
