@@ -9,12 +9,19 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class configScrapper {
 
@@ -31,16 +38,30 @@ public final class configScrapper {
                     .forEach(p -> {
                         String fileName = p.getFileName() != null ? p.getFileName().toString() : "";
                         try {
-                            if (TARGET_NAME.equals(fileName)) {
-                                // regular RPD.txt file on disk
-                                try (BufferedReader br = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
-                                    String line;
-                                    while ((line = br.readLine()) != null) lineHandler.accept(line);
-                                }
-                            } else if (fileName.toLowerCase().endsWith(".zip")) {
+                            if (fileName.toLowerCase().endsWith(".zip")) {
                                 // ZIP file on disk: open with ZipFile for random access
                                 try (ZipFile zf = new ZipFile(p.toFile())) {
                                     processZipFile(zf, lineHandler);
+                                }
+                            }
+                            else {
+                                switch (fileName) {
+                                    case "RPD.txt":
+                                        try (BufferedReader br = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
+                                            String line;
+                                            while ((line = br.readLine()) != null) lineHandler.accept(line);
+                                        }
+                                    case "RPD.json":
+                                        Map<String, String> depends = new HashMap<>();
+                                        depends = configFileParsers.parseJSON(p);
+                                        List<String> dependsKeys = new ArrayList<>(depends.keySet());
+                                        for(int i = 0; i < dependsKeys.size(); i++) {
+                                            lineHandler.accept(dependsKeys.get(i));
+                                        }
+                                        break;
+                                
+                                    default:
+                                        break;
                                 }
                             }
                         } catch (IOException e) {
@@ -122,4 +143,5 @@ public final class configScrapper {
         int slash = Math.max(entryName.lastIndexOf('/'), entryName.lastIndexOf('\\'));
         return slash >= 0 ? entryName.substring(slash + 1) : entryName;
     }
+
 }
