@@ -4,15 +4,17 @@
   "version": "${version}",
   "name": "RPdepent",
   "description": "a mod for checking the dependencies of a resourcepack",
-  "authors": ["Axolotl/Axolotl.cpp"],
-  "contact": {},
+  "authors": [
+    "Axolotl/Axolotl.cpp"
+  ],
+  "contact": {
+    "Discord server": "https://discord.gg/kzWsXBaspe",
+    "Discord username": "axolotl.cpp"
+  },
   "license": "GPL-3.0",
   "icon": "assets/rpdepent/icon.png",
   "environment": "*",
   "entrypoints": {
-    "fabric-datagen": [
-      "axo.dev.rpdepent.client.RpdepentDataGenerator"
-    ],
     "client": [
       "axo.dev.rpdepent.client.RpdepentClient"
     ],
@@ -26,6 +28,6 @@
   "depends": {
     "fabricloader": ">=0.17",
     "fabric": "*",
-    "minecraft": "${minecraft_version}"
+    "minecraft": "1.21.10"
   }
 }

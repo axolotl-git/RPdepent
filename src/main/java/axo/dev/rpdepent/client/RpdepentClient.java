@@ -24,12 +24,11 @@ public class RpdepentClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     // replace instance field with a static one
     public static final ArrayList<String> NOT_FOUND_MODS = new ArrayList<>();
-    private Screen parent;
+    public AtomicBoolean found = new AtomicBoolean(false);
     @Override
     public void onInitializeClient() {
         LOGGER.info("RPD client init");
         MinecraftClient client = MinecraftClient.getInstance();
-        AtomicBoolean found = new AtomicBoolean(false);
         if (client == null) {
             LOGGER.warn("MinecraftClient not yet available; skipping resourcepack scan.");
             return;
@@ -38,27 +37,39 @@ public class RpdepentClient implements ClientModInitializer {
 
         try {
             processRpdFiles(resourcepacks, line -> {
-                //check if the line as the OR operator
-                if (line.contains("||")) {
-                    //declare an array for the mods ID's
-                    String[] keywords = line.split("\\|\\|");
-                    //Loop trough all of them
-                    for(int i = 0; i < keywords.length; i++) {
-                        if(FabricLoader.getInstance().isModLoaded(keywords[i].strip())) {
-                            LOGGER.info("mod found: {}", keywords[i]);
-                            break; //found the motherfucker now terminate
-                        }
-                        else {
-                            NOT_FOUND_MODS.add(keywords[i]);
-                            found.set(true);
+                if (line == null || line.trim().isEmpty()) {
+                    return; // Skip empty lines
+                }
+
+                String trimmedLine = line.trim();
+
+                // Check if the line has the OR operator
+                if (trimmedLine.contains("||")) {
+                    boolean foundAny = false;
+                    String[] keywords = trimmedLine.split("\\|\\|");
+                    // Loop through all mod IDs in the OR condition
+                    for (String keyword : keywords) {
+                        String modId = keyword.strip();
+                        if (!modId.isEmpty() && FabricLoader.getInstance().isModLoaded(modId)) {
+                            LOGGER.info("Mod found: {}", modId);
+                            foundAny = true;
+                            break; // Found at least one required mod
                         }
                     }
-                }
-                else if (FabricLoader.getInstance().isModLoaded(line)) {
-                    LOGGER.info("mod found: {}", line);
+
+                    if (!foundAny) {
+                        // None of the mods in the OR condition were found
+                        String ORnotfound = keywords[0] + " or " + keywords[1];
+                        NOT_FOUND_MODS.add(ORnotfound);
+                        found.set(true);
+                    }
                 } else {
-                    NOT_FOUND_MODS.add(line);
-                    found.set(true);
+                    if (FabricLoader.getInstance().isModLoaded(trimmedLine)) {
+                        LOGGER.info("Mod found: {}", trimmedLine);
+                    } else {
+                        NOT_FOUND_MODS.add(trimmedLine);
+                        found.set(true);
+                    }
                 }
             });
         } catch (IOException e) {
@@ -66,16 +77,11 @@ public class RpdepentClient implements ClientModInitializer {
         }
 
         if (found.get()) {
-            ClientTickEvents.END_CLIENT_TICK.register(mc -> {
-
-                if (true){
-                    client.setScreen(new CrashScreen());
-                }
-
-            });
-            String newline = System.getProperty("line.separator");
-            MissingMods = "Mods with these IDs were not found: " + String.join(", ", NOT_FOUND_MODS);
+            ClientTickEvents.START_CLIENT_TICK.register(mc -> {
+                client.setScreen(new CrashScreen());
+            MissingMods = "Mods with these IDs were not found:\n" + String.join("; " + NOT_FOUND_MODS) +"\nyour resource packs may not work properly without";
             LOGGER.error(MissingMods);
-        }
+        });
     }
+}
 }
