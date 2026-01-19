@@ -1,3 +1,5 @@
+# MOVED ON CODEBERG
+
 ## how to use?
 **for resourcepack creators:**
 you just need to put in the root of your resourcepack a file named "RPD.txt", like this:
