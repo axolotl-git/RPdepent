@@ -1,4 +1,5 @@
-# MOVED ON CODEBERG
+# MOVED PERMANENTLY ON CODEBERG
+# https://codeberg.org/Axolotl_cpp/RPdepent
 
 ## how to use?
 **for resourcepack creators:**
